@@ -900,6 +900,10 @@ Views.settings = () => `
       iPhone/iPad : bouton Partager → « Sur l'écran d'accueil ». Android : menu → « Installer l'application ».
       Ordinateur : icône d'installation dans la barre d'adresse.
     </div>
+  </div>
+  <div class="card">
+    <h2>À propos</h2>
+    <div class="small muted" id="set-about">Chargement…</div>
   </div>`;
 
 Views.bindSettings = async () => {
@@ -930,4 +934,9 @@ Views.bindSettings = async () => {
     } catch (e) { App.handleError(e); }
   });
   App.renderInstallBanner(document.getElementById('install-slot-2'));
+  const roleLabel = { owner: 'Propriétaire', admin: 'Administrateur', user: 'Utilisateur' };
+  document.getElementById('set-about').innerHTML =
+    `Buxcoin ${APP_VERSION} · simulateur — argent 100% fictif.<br>` +
+    `Connecté : <b>${Views.esc(App.user.username)}</b> · rôle : <b>${roleLabel[App.user.role] || App.user.role}</b>.` +
+    (App.user.role === 'user' ? '<br>Pour gérer les utilisateurs (argent, blocage, suppression), connectez-vous avec le compte propriétaire créé lors de la configuration du serveur.' : '');
 };

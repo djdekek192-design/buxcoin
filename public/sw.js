@@ -1,4 +1,4 @@
-const CACHE = 'buxcoin-v5';
+const CACHE = 'buxcoin-v6';
 const SHELL = [
   '/', '/index.html', '/css/app.css',
   '/js/api.js', '/js/charts.js', '/js/views.js', '/js/admin.js', '/js/app.js',
@@ -19,6 +19,18 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET') return;
+  if (e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put('/index.html', copy));
+        }
+        return res;
+      }).catch(() => caches.match('/index.html').then(m => m || Response.error()))
+    );
+    return;
+  }
   if (url.pathname.startsWith('/api/')) {
     e.respondWith(fetch(e.request).catch(() => new Response(JSON.stringify({ error: 'Hors ligne' }), { status: 503, headers: { 'Content-Type': 'application/json' } })));
     return;

@@ -1,5 +1,8 @@
+const APP_VERSION = '5.1';
+
 const App = {
   user: null,
+  _swReloading: false,
   pollers: [],
   deferredInstall: null,
   lastNotifCheck: 0,
@@ -310,7 +313,15 @@ const App = {
     });
 
     if ('serviceWorker' in navigator) {
-      try { await navigator.serviceWorker.register('/sw.js'); } catch (_) {}
+      try {
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (App._swReloading) return;
+          App._swReloading = true;
+          location.reload();
+        });
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        setInterval(() => reg.update().catch(() => {}), 4 * 60 * 1000);
+      } catch (_) {}
     }
 
     if (API.token) {
