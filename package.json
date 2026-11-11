@@ -1,0 +1,20 @@
+{
+  "name": "buxcoin",
+  "version": "1.0.0",
+  "description": "Buxcoin — plateforme de simulation de trading (argent 100% fictif). Site web professionnel, application installable (PWA), comptes, marchés, portefeuille virtuel, IA d'analyse et administration privée.",
+  "main": "server/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "setup-owner": "node scripts/setup-owner.js",
+    "smoke": "node scripts/smoke-test.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "license": "MIT"
+}

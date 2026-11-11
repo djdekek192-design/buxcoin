@@ -103,12 +103,6 @@ scripts/         setup-owner (CLI), gen-icons, smoke-test
 data/            base SQLite, clés, jeton de configuration, sauvegardes (créé au démarrage)
 ```
 
-## Tests
-
-```bash
-npm run smoke     # 57 vérifications end-to-end (auth, marchés, trading, IA, administration, sécurité)
-```
-
 ## Avertissement
 
 Buxcoin est un **outil pédagogique de simulation**. Les cours peuvent s'appuyer sur des données réelles mais
