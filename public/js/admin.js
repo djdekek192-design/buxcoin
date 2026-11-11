@@ -2,8 +2,8 @@ Views.admin = () => `
   <div class="page-head"><div><h1>Administration privée</h1>
   <div class="subtitle">Réservée au propriétaire et aux administrateurs. Toutes les actions sont journalisées.</div></div></div>
   <div class="tabs" id="admin-tabs">
-    <button class="tab active" data-tab="overview">Vue d'ensemble</button>
-    <button class="tab" data-tab="users">Utilisateurs</button>
+    <button class="tab active" data-tab="users">Utilisateurs</button>
+    <button class="tab" data-tab="overview">Vue d'ensemble</button>
     ${App.user.role === 'owner' ? '<button class="tab" data-tab="settings">Paramètres globaux</button>' : ''}
     ${App.user.role === 'owner' ? '<button class="tab" data-tab="admins">Administrateurs</button>' : ''}
     <button class="tab" data-tab="events">Calendrier</button>
@@ -40,6 +40,7 @@ Views.bindAdmin = () => {
       </div>`;
   };
   loadOverview();
+  show('users');
 
   /* ---- users ---- */
   const usersEl = document.getElementById('admin-users');

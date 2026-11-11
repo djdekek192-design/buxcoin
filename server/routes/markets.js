@@ -20,7 +20,12 @@ router.get('/assets', requireAuth, (req, res) => {
   let assets = getAllAssets.all();
   if (kind && ['crypto', 'stock', 'commodity'].includes(kind)) assets = assets.filter(a => a.kind === kind);
   const watch = new Set(db.prepare('SELECT asset_id FROM watchlist WHERE user_id = ?').all(req.user.id).map(r => r.asset_id));
-  res.json({ assets: assets.map(a => ({ ...assetOut(a), watched: watch.has(a.id) })) });
+  const spark = db.prepare("SELECT close FROM candles WHERE asset_id = ? AND interval = '1h' ORDER BY ts DESC LIMIT 24");
+  res.json({ assets: assets.map(a => ({
+    ...assetOut(a),
+    watched: watch.has(a.id),
+    spark: spark.all(a.id).map(r => r.close).reverse()
+  })) });
 });
 
 router.get('/assets/:symbol', requireAuth, (req, res) => {

@@ -212,6 +212,7 @@ Views.dashboard = () => `
       <h1>Bonjour, ${Views.esc(App.user.username)} 👋</h1>
       <div class="subtitle">Vue générale de votre portefeuille virtuel et des marchés.</div>
     </div>
+    ${(App.user.role === 'admin' || App.user.role === 'owner') ? '<button class="btn btn-green" id="dash-topup">＋ Recharger mon solde</button>' : ''}
   </div>
   <div class="grid grid-4" id="dash-stats"></div>
   <div class="grid grid-main mt">
@@ -236,6 +237,27 @@ Views.dashboard = () => `
 
 Views.bindDashboard = async () => {
   App.renderInstallBanner(document.getElementById('install-slot'));
+  const topupBtn = document.getElementById('dash-topup');
+  if (topupBtn) topupBtn.addEventListener('click', () => {
+    App.modal(`
+      <h3>Recharger mon solde</h3>
+      <div class="small muted">Argent 100% fictif — crédité immédiatement sur votre compte.</div>
+      <label>Montant ($ virtuels)</label>
+      <input id="tu-amount" type="number" step="1" min="1" value="1000">
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="mm-cancel">Annuler</button>
+        <button class="btn btn-green" id="mm-add">Recharger</button>
+      </div>`, async () => {
+      const amount = parseFloat(document.getElementById('tu-amount').value);
+      if (!(amount > 0)) return App.toast('Montant invalide.', 'error');
+      try {
+        await API.post(`/admin/users/${App.user.id}/money`, { operation: 'add', amount, note: 'recharge personnelle' });
+        App.toast(`${Views.money(amount)} ajoutés à votre solde ✅`, 'success');
+        App.closeModal();
+        App.route();
+      } catch (e) { App.handleError(e); }
+    });
+  });
   try {
     const [pf, assets, overview] = await Promise.all([
       API.get('/trading/portfolio'),
@@ -336,6 +358,7 @@ Views.bindMarkets = async () => {
           <div class="market-name">${Views.esc(a.name)}${a.watched ? ' <span style="color:var(--accent)">★</span>' : ''}</div>
           <div class="market-sub">${Views.esc(a.symbol)} · ${Views.kindLabel[a.kind] || a.kind}</div>
         </div>
+        <div class="market-spark"><canvas class="spark" data-h="34" data-sym="${a.symbol}"></canvas></div>
         <div class="market-price">
           <div class="p">${Views.money(a.price, a.price < 10 ? 3 : 2)}</div>
           <div class="c price-pill ${a.change_percent >= 0 ? 'up' : 'down'}">${Views.pct(a.change_percent)}</div>
@@ -344,6 +367,12 @@ Views.bindMarkets = async () => {
     }).join('') || '<div class="empty-state">Aucun actif trouvé.</div>';
     document.querySelectorAll('#markets-list .market-row').forEach(row =>
       row.addEventListener('click', () => location.hash = '#/market/' + row.dataset.sym));
+    document.querySelectorAll('#markets-list canvas.spark').forEach(cv => {
+      const a = rows.find(x => x.symbol === cv.dataset.sym);
+      if (a && a.spark && a.spark.length > 2) {
+        Charts.line(cv, a.spark, { color: a.change_percent >= 0 ? '#2ecc71' : '#ff5c5c' });
+      }
+    });
   };
   document.querySelectorAll('#kind-filter .chip').forEach(chip => chip.addEventListener('click', () => {
     document.querySelectorAll('#kind-filter .chip').forEach(c => c.classList.remove('active'));

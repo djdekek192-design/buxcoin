@@ -283,6 +283,7 @@ tr:last-child td { border-bottom: none; }
 .market-price { text-align: right; }
 .market-price .p { font-weight: 800; font-size: 14.5px; }
 .market-price .c { font-size: 12px; margin-top: 2px; }
+.market-spark { width: 78px; flex-shrink: 0; }
 .star-btn { background: none; border: none; font-size: 18px; color: var(--muted); cursor: pointer; padding: 8px; }
 .star-btn.on { color: var(--accent); }
 
@@ -466,5 +467,6 @@ canvas.candles-canvas { touch-action: none; cursor: crosshair; }
   .stat-value { font-size: 19px; }
   .toasts { left: 12px; right: 12px; max-width: none; top: 62px; }
   .market-row { padding: 11px 12px; }
+  .market-spark { display: none; }
   .modal-actions .btn { flex: 1; }
 }
