@@ -283,40 +283,44 @@ Views.markets = () => `
     <div class="subtitle">Cours actualisés automatiquement · prix pouvant s'appuyer sur les marchés réels (simulation).</div></div>
   </div>
   <div class="card">
-    <div class="flex-between">
-      <div class="chart-toolbar" id="kind-filter">
-        <button class="chip active" data-kind="">Tous</button>
-        <button class="chip" data-kind="crypto">🪙 Cryptomonnaies</button>
-        <button class="chip" data-kind="stock">🏢 Actions</button>
-        <button class="chip" data-kind="commodity">🥇 Matières premières</button>
-      </div>
-      <input id="market-search" placeholder="Rechercher (Bitcoin, Apple…)" style="max-width:240px">
+    <div class="chart-toolbar" id="kind-filter">
+      <button class="chip active" data-kind="">Tous</button>
+      <button class="chip" data-kind="crypto">🪙 Cryptomonnaies</button>
+      <button class="chip" data-kind="stock">🏢 Actions</button>
+      <button class="chip" data-kind="commodity">🥇 Matières premières</button>
+      <input id="market-search" placeholder="Rechercher (Bitcoin, Apple…)" style="flex:1;min-width:160px;max-width:280px">
     </div>
-    <div class="table-wrap mt">
-      <table>
-        <thead><tr><th>Actif</th><th>Prix</th><th>24h</th><th></th></tr></thead>
-        <tbody id="markets-body"></tbody>
-      </table>
-    </div>
+    <div class="market-list mt" id="markets-list"></div>
   </div>`;
 
 Views.bindMarkets = async () => {
   let all = [];
   let filter = '';
+  const prev = {};
   const search = document.getElementById('market-search');
   const render = () => {
     const q = (search.value || '').toLowerCase();
     const rows = all.filter(a => (!filter || a.kind === filter) &&
       (a.name.toLowerCase().includes(q) || a.symbol.toLowerCase().includes(q)));
-    document.getElementById('markets-body').innerHTML = rows.map(a => `
-      <tr class="clickable" data-sym="${a.symbol}">
-        <td>${Views.assetCell(a)}</td>
-        <td style="font-weight:700">${Views.money(a.price, a.price < 10 ? 3 : 2)}</td>
-        <td class="${Views.pctClass(a.change_percent)}">${Views.pct(a.change_percent)}</td>
-        <td>${a.watched ? '<span class="badge badge-accent">★ suivi</span>' : ''}</td>
-      </tr>`).join('') || '<tr><td colspan="4" class="empty-state">Aucun actif trouvé.</td></tr>';
-    document.querySelectorAll('#markets-body tr[data-sym]').forEach(tr =>
-      tr.addEventListener('click', () => location.hash = '#/market/' + tr.dataset.sym));
+    document.getElementById('markets-list').innerHTML = rows.map(a => {
+      const old = prev[a.symbol];
+      const flash = old !== undefined && a.price !== old ? (a.price > old ? ' flash-up' : ' flash-down') : '';
+      prev[a.symbol] = a.price;
+      return `
+      <div class="market-row${flash}" data-sym="${a.symbol}">
+        <div class="market-ico">${Views.esc(a.symbol).slice(0, 4)}</div>
+        <div class="market-info">
+          <div class="market-name">${Views.esc(a.name)}${a.watched ? ' <span style="color:var(--accent)">★</span>' : ''}</div>
+          <div class="market-sub">${Views.esc(a.symbol)} · ${Views.kindLabel[a.kind] || a.kind}</div>
+        </div>
+        <div class="market-price">
+          <div class="p">${Views.money(a.price, a.price < 10 ? 3 : 2)}</div>
+          <div class="c price-pill ${a.change_percent >= 0 ? 'up' : 'down'}">${Views.pct(a.change_percent)}</div>
+        </div>
+      </div>`;
+    }).join('') || '<div class="empty-state">Aucun actif trouvé.</div>';
+    document.querySelectorAll('#markets-list .market-row').forEach(row =>
+      row.addEventListener('click', () => location.hash = '#/market/' + row.dataset.sym));
   };
   document.querySelectorAll('#kind-filter .chip').forEach(chip => chip.addEventListener('click', () => {
     document.querySelectorAll('#kind-filter .chip').forEach(c => c.classList.remove('active'));
@@ -331,7 +335,7 @@ Views.bindMarkets = async () => {
     render();
   };
   await load();
-  App.registerPoller(load, 15000);
+  App.registerPoller(load, 8000);
 };
 
 /* ================= MARKET DETAIL ================= */
@@ -349,6 +353,7 @@ Views.marketDetail = (symbol) => `
           <button class="chip" id="md-sma-toggle">SMA 20/50</button>
         </div>
         <div class="chart-wrap"><canvas id="md-chart" data-h="300"></canvas></div>
+        <div class="chart-hint">Glissez pour naviguer · pincez (ou molette) pour zoomer</div>
         <div class="chart-wrap mt"><canvas id="md-rsi" data-h="90"></canvas></div>
         <div class="chart-wrap mt"><canvas id="md-macd" data-h="90"></canvas></div>
       </div>
@@ -399,6 +404,8 @@ Views.bindMarketDetail = async (symbol) => {
   let asset = null;
   let candles = [];
   let analysis = null;
+  let prevPrice = null;
+  const group = Charts.createGroup();
 
   const head = document.getElementById('md-head');
   const loadHead = async () => {
@@ -422,6 +429,11 @@ Views.bindMarketDetail = async (symbol) => {
       </div>`;
     const watchBtn = document.getElementById('ord-watch');
     if (watchBtn) watchBtn.textContent = asset.watched ? '★ Suivi ✓' : '★ Suivre';
+    const priceEl = head.querySelector('.asset-price');
+    if (priceEl && prevPrice !== null && asset.price !== prevPrice) {
+      priceEl.classList.add(asset.price > prevPrice ? 'flash-up' : 'flash-down');
+    }
+    prevPrice = asset.price;
   };
 
   const loadCandles = async () => {
@@ -432,16 +444,18 @@ Views.bindMarketDetail = async (symbol) => {
 
   const drawCharts = () => {
     Charts.candles(document.getElementById('md-chart'), candles, {
-      sma: showSma ? [[20, '#4da3ff'], [50, '#a78bfa']] : null
+      sma: showSma ? [[20, '#4da3ff'], [50, '#a78bfa']] : null,
+      group,
+      interval
     });
     if (analysis && analysis.indicators.rsi_series) {
       Charts.panel(document.getElementById('md-rsi'), analysis.indicators.rsi_series.slice(-candles.length), {
-        title: 'RSI (14)', color: '#a78bfa', midline: 50
+        title: 'RSI (14)', color: '#a78bfa', midline: 50, group
       });
     }
     if (analysis && analysis.indicators.macd && analysis.indicators.macd.series) {
       Charts.panel(document.getElementById('md-macd'), analysis.indicators.macd.series.hist.slice(-candles.length), {
-        title: 'MACD (12,26,9)', color: '#4da3ff', midline: 0
+        title: 'MACD (12,26,9)', color: '#4da3ff', midline: 0, group
       });
     }
   };
@@ -544,8 +558,8 @@ Views.bindMarketDetail = async (symbol) => {
 
   const refreshAll = async () => { await Promise.all([loadHead(), loadCandles(), loadPosition()]); };
   await refreshAll();
-  loadAnalysis();
-  App.registerPoller(refreshAll, 15000);
+  loadAnalysis().catch(e => App.handleError(e));
+  App.registerPoller(refreshAll, 5000);
 };
 
 /* ================= PORTFOLIO ================= */

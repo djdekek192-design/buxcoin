@@ -60,9 +60,34 @@ const App = {
     API.setToken(null);
     App.user = null;
     App.clearPollers();
+    App.closeDrawer();
     if (!silent) App.toast('Vous êtes déconnecté.');
     location.hash = '#/login';
     App.route();
+  },
+
+  openDrawer() {
+    App.renderNav();
+    document.getElementById('drawer').hidden = false;
+    document.getElementById('drawer-overlay').hidden = false;
+  },
+
+  closeDrawer() {
+    const d = document.getElementById('drawer');
+    if (d) d.hidden = true;
+    const o = document.getElementById('drawer-overlay');
+    if (o) o.hidden = true;
+  },
+
+  async refreshTopbarBalance() {
+    if (!App.user) return;
+    const el = document.getElementById('topbar-balance');
+    try {
+      const pf = await API.get('/trading/portfolio');
+      if (!el) return;
+      el.hidden = false;
+      el.innerHTML = `<span class="small">Solde</span>${Views.money(pf.portfolio.cash)}`;
+    } catch (_) {}
   },
 
   onAuthed(user) {
@@ -94,14 +119,23 @@ const App = {
 
   renderNav() {
     const nav = document.getElementById('nav');
+    const drawerNav = document.getElementById('drawer-nav');
     const bottom = document.getElementById('bottombar');
     const items = App.navItems();
     const current = location.hash.split('?')[0] || '#/dashboard';
-    nav.innerHTML = items.map(it =>
-      `<a href="${it.hash}" class="${current === it.hash ? 'active' : ''}"><span>${it.icon}</span>${Views.esc(it.label)}</a>`).join('');
+    const link = it =>
+      `<a href="${it.hash}" class="${current === it.hash ? 'active' : ''}"><span>${it.icon}</span>${Views.esc(it.label)}</a>`;
+    nav.innerHTML = items.map(link).join('');
+    if (drawerNav) {
+      drawerNav.innerHTML = items.map(link).join('');
+      drawerNav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => App.closeDrawer()));
+    }
     const mobileItems = items.filter(i => ['#/dashboard', '#/markets', '#/portfolio', '#/assistant'].includes(i.hash));
     bottom.innerHTML = mobileItems.map(it =>
-      `<a href="${it.hash}" class="${current === it.hash ? 'active' : ''}"><span class="ico">${it.icon}</span>${Views.esc(it.label)}</a>`).join('');
+      `<a href="${it.hash}" class="${current === it.hash ? 'active' : ''}"><span class="ico">${it.icon}</span>${Views.esc(it.label)}</a>`).join('') +
+      `<button type="button" id="bb-menu"><span class="ico">☰</span>Menu</button>`;
+    const bbMenu = document.getElementById('bb-menu');
+    if (bbMenu) bbMenu.addEventListener('click', () => App.openDrawer());
   },
 
   renderInstallBanner(slot) {
@@ -187,6 +221,8 @@ const App = {
     document.getElementById('sidebar').hidden = !authed;
     document.getElementById('bottombar').hidden = !authed;
     document.getElementById('logout-btn').hidden = !authed;
+    document.getElementById('topbar').hidden = !authed;
+    if (authed) App.refreshTopbarBalance();
     App.renderNav();
 
     const routes = {
@@ -254,6 +290,16 @@ const App = {
     });
     window.addEventListener('hashchange', () => App.route());
     document.getElementById('logout-btn').addEventListener('click', () => App.logout());
+    document.getElementById('menu-btn').addEventListener('click', () => App.openDrawer());
+    document.getElementById('drawer-close').addEventListener('click', () => App.closeDrawer());
+    document.getElementById('drawer-overlay').addEventListener('click', () => App.closeDrawer());
+    document.getElementById('drawer-logout').addEventListener('click', () => App.logout());
+
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => Charts.redrawAll(), 150);
+    });
 
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();

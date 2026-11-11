@@ -280,5 +280,5 @@ Views.bindAdmin = () => {
       loadEvents();
     } catch (e) { App.handleError(e); }
   });
-  loadEvents();
+  loadEvents().catch(e => App.handleError(e));
 };
