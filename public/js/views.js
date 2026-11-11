@@ -270,6 +270,29 @@ Views.bindDashboard = async () => {
 
     const days = await API.get('/markets/assets/BTC/history?days=45');
     Charts.line(document.getElementById('dash-chart'), days.history.map(h => h.close));
+
+    const loadLive = async () => {
+      const [pf2, assets2] = await Promise.all([
+        API.get('/trading/portfolio'),
+        API.get('/markets/assets')
+      ]);
+      const p2 = pf2.portfolio;
+      const perf2 = p2.total - 10000;
+      document.getElementById('dash-stats').innerHTML = `
+        <div class="card"><div class="stat-label">Solde disponible</div><div class="stat-value">${Views.money(p2.cash)}</div><div class="stat-sub">argent virtuel</div></div>
+        <div class="card"><div class="stat-label">Valeur investie</div><div class="stat-value">${Views.money(p2.invested)}</div><div class="stat-sub">${p2.positions.length} position(s)</div></div>
+        <div class="card"><div class="stat-label">Total du portefeuille</div><div class="stat-value">${Views.money(p2.total)}</div><div class="stat-sub">d\u00e9part : 10 000 $</div></div>
+        <div class="card"><div class="stat-label">Performance</div><div class="stat-value ${Views.pctClass(perf2)}">${Views.pct((perf2 / 10000) * 100)}</div><div class="stat-sub ${Views.pctClass(perf2)}">${perf2 >= 0 ? '+' : ''}${Views.money(perf2)}</div></div>`;
+      const top2 = assets2.assets.slice().sort((a, b) => Math.abs(b.change_percent) - Math.abs(a.change_percent)).slice(0, 6);
+      document.getElementById('dash-markets').innerHTML = top2.map(a => `
+        <div class="clickable" style="display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-bottom:1px solid var(--border)" data-goto="#/market/${a.symbol}">
+          <div><b>${Views.esc(a.symbol)}</b> <span class="small muted">${Views.esc(a.name)}</span></div>
+          <div style="text-align:right"><div>${Views.money(a.price, a.price < 10 ? 3 : 2)}</div>
+          <div class="small ${Views.pctClass(a.change_percent)}">${Views.pct(a.change_percent)}</div></div>
+        </div>`).join('');
+      document.querySelectorAll('[data-goto]').forEach(el => el.addEventListener('click', () => location.hash = el.dataset.goto));
+    };
+    App.registerPoller(loadLive, 5000);
   } catch (e) {
     App.handleError(e);
   }
@@ -335,7 +358,7 @@ Views.bindMarkets = async () => {
     render();
   };
   await load();
-  App.registerPoller(load, 8000);
+  App.registerPoller(load, 5000);
 };
 
 /* ================= MARKET DETAIL ================= */
@@ -623,7 +646,7 @@ Views.bindPortfolio = async () => {
       </div>`;
   };
   await load();
-  App.registerPoller(load, 15000);
+  App.registerPoller(load, 8000);
 };
 
 /* ================= ORDERS ================= */
@@ -689,7 +712,7 @@ Views.bindOrders = async () => {
       td.addEventListener('click', () => location.hash = '#/market/' + td.dataset.sym));
   };
   await load();
-  App.registerPoller(load, 15000);
+  App.registerPoller(load, 8000);
 };
 
 /* ================= HISTORY ================= */
@@ -752,7 +775,7 @@ Views.bindWatchlist = async () => {
     }));
   };
   await load();
-  App.registerPoller(load, 15000);
+  App.registerPoller(load, 8000);
 };
 
 /* ================= ASSISTANT ================= */

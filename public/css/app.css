@@ -34,7 +34,11 @@
 html, body { height: 100%; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background: var(--bg);
+  background:
+    radial-gradient(900px 520px at 88% -12%, rgba(122, 90, 248, .16), transparent 62%),
+    radial-gradient(820px 440px at -12% -4%, rgba(255, 158, 27, .11), transparent 58%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
@@ -70,7 +74,11 @@ button { font-family: inherit; }
   transition: background .15s, color .15s;
 }
 .nav a:hover { background: var(--bg-3); color: var(--text); }
-.nav a.active { background: var(--bg-3); color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.nav a.active {
+  background: linear-gradient(135deg, rgba(255, 184, 77, .16), rgba(255, 138, 0, .07));
+  color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
 .sidebar-footer { display: flex; flex-direction: column; gap: 10px; }
 .sim-badge {
   font-size: 10.5px; text-align: center; color: var(--accent);
@@ -87,6 +95,12 @@ button { font-family: inherit; }
   border-bottom: 1px solid var(--border);
   align-items: center; gap: 10px;
   padding: 10px 14px;
+}
+[data-theme="light"] body {
+  background:
+    radial-gradient(900px 520px at 88% -12%, rgba(122, 90, 248, .10), transparent 62%),
+    radial-gradient(820px 440px at -12% -4%, rgba(255, 158, 27, .10), transparent 58%),
+    var(--bg);
 }
 [data-theme="light"] .topbar { background: rgba(255, 255, 255, .92); }
 .menu-btn {
@@ -160,12 +174,19 @@ button { font-family: inherit; }
 @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
 h1 { font-size: 24px; margin-bottom: 4px; letter-spacing: -.3px; }
+h1::after {
+  content: ""; display: block; width: 42px; height: 3px; margin-top: 7px;
+  border-radius: 3px; background: var(--accent-grad);
+}
 h2 { font-size: 16.5px; margin-bottom: 12px; }
 .subtitle { color: var(--muted); font-size: 13.5px; margin-bottom: 20px; }
 .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 
 .card {
   background: var(--card);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 18px;
@@ -182,6 +203,8 @@ h2 { font-size: 16.5px; margin-bottom: 12px; }
 
 .stat-label { color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; }
 .stat-value { font-size: 22px; font-weight: 800; letter-spacing: -.3px; }
+.stat-value.pos { color: var(--green); }
+.stat-value.neg { color: var(--red); }
 .stat-sub { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
 .pos { color: var(--green); }
 .neg { color: var(--red); }
@@ -194,12 +217,13 @@ h2 { font-size: 16.5px; margin-bottom: 12px; }
   transition: filter .15s, transform .05s;
   text-decoration: none; min-height: 44px;
 }
+.btn { box-shadow: 0 6px 18px rgba(255, 138, 0, .28); }
 .btn:hover { filter: brightness(1.08); }
 .btn:active { transform: scale(.98); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn-secondary { background: var(--bg-3); color: var(--text); border: 1px solid var(--border); }
-.btn-danger { background: var(--red); color: #fff; }
-.btn-green { background: linear-gradient(135deg, #34d97b, #1fa85a); color: #06220f; }
+.btn-danger { background: var(--red); color: #fff; box-shadow: 0 6px 18px rgba(255, 92, 92, .25); }
+.btn-green { background: linear-gradient(135deg, #34d97b, #1fa85a); color: #06220f; box-shadow: 0 6px 18px rgba(31, 168, 90, .28); }
 .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
 .btn-ghost:hover { color: var(--text); }
 .btn-sm { padding: 8px 12px; font-size: 12.5px; border-radius: 10px; min-height: 36px; }
@@ -402,6 +426,31 @@ canvas.candles-canvas { touch-action: none; cursor: crosshair; }
   background: rgba(255,92,92,.1); border: 1px solid rgba(255,92,92,.4); color: var(--red);
   border-radius: 10px; padding: 10px 14px; font-size: 13px; max-width: 420px;
   word-break: break-word; white-space: pre-wrap;
+}
+
+/* ============ ADMIN : CARTES SUR MOBILE ============ */
+@media (max-width: 900px) {
+  table:has(#adm-users-body) thead { display: none; }
+  #adm-users-body tr {
+    display: block;
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  #adm-users-body td {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    border-bottom: 1px dashed var(--border); padding: 8px 0;
+  }
+  #adm-users-body td::before {
+    content: attr(data-label);
+    color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  #adm-users-body td[data-label="Actions"] { flex-direction: column; align-items: stretch; }
+  #adm-users-body td[data-label="Actions"]::before { display: none; }
+  #adm-users-body .actions-cell .btn { width: 100%; }
 }
 
 /* ============ RESPONSIVE MOBILE ============ */

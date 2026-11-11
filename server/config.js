@@ -23,7 +23,7 @@ const config = {
   jwtSecret: loadSecret('jwt_secret'),
   tokenTtlSeconds: parseInt(process.env.TOKEN_TTL || String(60 * 60 * 24 * 14), 10),
   startBalance: parseFloat(process.env.START_BALANCE || '10000'),
-  priceTickMs: parseInt(process.env.PRICE_TICK_MS || '15000', 10),
+  priceTickMs: parseInt(process.env.PRICE_TICK_MS || '5000', 10),
   realPricesEnabled: process.env.REAL_PRICES !== '0',
   cryptoApiBase: process.env.CRYPTO_API_BASE || 'https://api.coingecko.com/api/v3',
   stockApiBase: process.env.STOCK_API_BASE || 'https://stooq.com',

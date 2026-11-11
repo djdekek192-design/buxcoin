@@ -222,7 +222,10 @@ const App = {
     document.getElementById('bottombar').hidden = !authed;
     document.getElementById('logout-btn').hidden = !authed;
     document.getElementById('topbar').hidden = !authed;
-    if (authed) App.refreshTopbarBalance();
+    if (authed) {
+      App.refreshTopbarBalance();
+      App.registerPoller(() => App.refreshTopbarBalance(), 5000);
+    }
     App.renderNav();
 
     const routes = {

@@ -106,12 +106,12 @@ Views.bindAdmin = () => {
     const isOwner = App.user.role === 'owner';
     document.getElementById('adm-users-body').innerHTML = data.users.map(u => `
       <tr>
-        <td><b>${Views.esc(u.username)}</b><div class="small muted">${Views.esc(u.email)}</div></td>
-        <td>${roleBadge(u.role)}</td>
-        <td style="font-weight:700">${Views.money(u.balance)}</td>
-        <td>${u.is_blocked ? '<span class="badge badge-red">Bloqué</span>' : '<span class="badge badge-green">Actif</span>'}</td>
-        <td class="small muted">${Views.date(u.created_at)}</td>
-        <td><div class="actions-cell">
+        <td data-label="Utilisateur"><b>${Views.esc(u.username)}</b><div class="small muted">${Views.esc(u.email)}</div></td>
+        <td data-label="Rôle">${roleBadge(u.role)}</td>
+        <td data-label="Solde" style="font-weight:700">${Views.money(u.balance)}</td>
+        <td data-label="Statut">${u.is_blocked ? '<span class="badge badge-red">Bloqué</span>' : '<span class="badge badge-green">Actif</span>'}</td>
+        <td data-label="Créé le" class="small muted">${Views.date(u.created_at)}</td>
+        <td data-label="Actions"><div class="actions-cell">
           ${u.role !== 'owner' ? `<button class="btn btn-secondary btn-sm" data-money="${u.id}">💰 Argent</button>` : ''}
           ${u.role !== 'owner' ? `<button class="btn btn-secondary btn-sm" data-block="${u.id}" data-to="${u.is_blocked ? '0' : '1'}">${u.is_blocked ? 'Débloquer' : 'Bloquer'}</button>` : ''}
           ${isOwner && u.role !== 'owner' ? `<button class="btn btn-secondary btn-sm" data-role="${u.id}" data-to="${u.role === 'admin' ? 'user' : 'admin'}">${u.role === 'admin' ? 'Révoquer admin' : 'Promouvoir admin'}</button>` : ''}
