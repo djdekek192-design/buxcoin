@@ -83,10 +83,15 @@ function start() {
     if (created) {
       console.log('============================================================');
       console.log('  AUCUN PROPRIÉTAIRE CONFIGURÉ');
-      console.log(`  Jeton de configuration écrit dans : ${created.file}`);
+      console.log('  Jeton de configuration :');
+      console.log('');
+      console.log('  ' + created.token);
+      console.log('');
+      console.log(`  (aussi disponible dans : ${created.file})`);
       console.log('  Ouvrez le site et suivez l\'écran « Configuration du propriétaire »');
       console.log('  ou exécutez : npm run setup-owner');
       console.log('  Le premier compte créé normalement NE devient PAS propriétaire.');
+      console.log('  Ce jeton est à usage unique et expire après 24 h.');
       console.log('============================================================');
     }
   }

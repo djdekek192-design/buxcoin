@@ -18,8 +18,8 @@ function createOwnerSetupToken(ttlHours = 24) {
 }
 
 function ensureOwnerSetupToken() {
-  const pending = db.prepare("SELECT token_hash FROM setup_tokens WHERE purpose = 'owner_setup' AND used = 0 AND expires_at > ?").get(Date.now());
-  if (pending) return null;
+  db.prepare("DELETE FROM setup_tokens WHERE purpose = 'owner_setup' AND used = 0").run();
+  try { fs.unlinkSync(path.join(config.dataDir, 'OWNER_SETUP_TOKEN.txt')); } catch (_) {}
   return createOwnerSetupToken();
 }
 
