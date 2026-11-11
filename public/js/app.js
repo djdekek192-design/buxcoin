@@ -1,4 +1,4 @@
-const APP_VERSION = '5.2';
+const APP_VERSION = '5.3';
 
 const App = {
   user: null,
@@ -53,6 +53,28 @@ const App = {
 
   registerPoller(fn, ms) {
     App.pollers.push(setInterval(fn, ms));
+  },
+
+  cacheGet(key, maxAgeMs) {
+    try {
+      const raw = localStorage.getItem('bux_' + key);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (maxAgeMs && Date.now() - parsed.at > maxAgeMs) return null;
+      return parsed.data;
+    } catch (_) { return null; }
+  },
+
+  cacheSet(key, data) {
+    try { localStorage.setItem('bux_' + key, JSON.stringify({ at: Date.now(), data })); } catch (_) {}
+  },
+
+  async cachedOr(key, fetcher, maxAgeMs) {
+    const cached = App.cacheGet(key, maxAgeMs);
+    if (cached) return cached;
+    const data = await fetcher();
+    App.cacheSet(key, data);
+    return data;
   },
 
   applyTheme() {

@@ -1,4 +1,4 @@
-const CACHE = 'buxcoin-v7';
+const CACHE = 'buxcoin-v8';
 const SHELL = [
   '/', '/index.html', '/css/app.css',
   '/js/api.js', '/js/charts.js', '/js/views.js', '/js/admin.js', '/js/app.js',

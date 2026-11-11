@@ -260,9 +260,9 @@ Views.bindDashboard = async () => {
   });
   try {
     const [pf, assets, overview] = await Promise.all([
-      API.get('/trading/portfolio'),
-      API.get('/markets/assets'),
-      API.get('/ai/market-overview')
+      App.cachedOr('dash_pf', () => API.get('/trading/portfolio'), 15000),
+      App.cachedOr('dash_assets', () => API.get('/markets/assets'), 15000),
+      App.cachedOr('dash_overview', () => API.get('/ai/market-overview'), 60000)
     ]);
     const p = pf.portfolio;
     const perf = p.total - 10000;
@@ -290,7 +290,7 @@ Views.bindDashboard = async () => {
       ${btc ? `Bitcoin : tendance <b>${Views.esc(btc.trend)}</b>, risque <b>${Views.esc(btc.risk_level)}</b>, RSI ${btc.rsi ? btc.rsi.toFixed(0) : 'n/d'}.` : ''}
       <div class="mt"><a href="#/assistant" style="color:var(--accent);font-weight:700;text-decoration:none">Ouvrir l'assistant IA →</a></div>`;
 
-    const days = await API.get('/markets/assets/BTC/history?days=45');
+    const days = await App.cachedOr('dash_hist', () => API.get('/markets/assets/BTC/history?days=45'), 60000);
     Charts.line(document.getElementById('dash-chart'), days.history.map(h => h.close));
 
     const loadLive = async () => {
@@ -381,9 +381,12 @@ Views.bindMarkets = async () => {
     render();
   }));
   search.addEventListener('input', render);
+  const cached = App.cacheGet('markets', 120000);
+  if (cached) { all = cached; render(); }
   const load = async () => {
     const data = await API.get('/markets/assets');
     all = data.assets;
+    App.cacheSet('markets', all);
     render();
   };
   await load();
@@ -489,8 +492,11 @@ Views.bindMarketDetail = async (symbol) => {
   };
 
   const loadCandles = async () => {
+    const cached = App.cacheGet(`candles_${symbol}_${interval}`, 30000);
+    if (cached) { candles = cached; drawCharts(); }
     const data = await API.get(`/markets/assets/${symbol}/candles?interval=${interval}&limit=180`);
     candles = data.candles;
+    App.cacheSet(`candles_${symbol}_${interval}`, candles);
     drawCharts();
   };
 
@@ -513,7 +519,7 @@ Views.bindMarketDetail = async (symbol) => {
   };
 
   const loadAnalysis = async () => {
-    const data = await API.get('/markets/assets/' + symbol + '/analysis');
+    const data = await App.cachedOr('analysis_' + symbol, () => API.get('/markets/assets/' + symbol + '/analysis'), 30000);
     analysis = data.analysis;
     const toneClass = { bullish: 'var(--green)', bearish: 'var(--red)', neutral: 'var(--muted)' };
     document.getElementById('md-signals').innerHTML = `

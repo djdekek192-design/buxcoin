@@ -125,7 +125,10 @@ async function main() {
   check('vente sans quantité refusée', sellTooMuch.status === 400);
 
   const priceNow = (await jreq('GET', '/markets/assets/BTC', null, aliceTok)).data.asset.price;
-  const limit = await jreq('POST', '/trading/orders', { symbol: 'BTC', side: 'buy', type: 'limit', qty: 0.01, limit_price: priceNow * 1.5 }, aliceTok);
+  const cashNow = (await jreq('GET', '/trading/portfolio', null, aliceTok)).data.portfolio.cash;
+  const limitPrice = priceNow * 1.5;
+  const limitQty = Math.max(0.0001, Math.floor((cashNow * 0.5) / (limitPrice * 1.002) * 1e8) / 1e8);
+  const limit = await jreq('POST', '/trading/orders', { symbol: 'BTC', side: 'buy', type: 'limit', qty: limitQty, limit_price: limitPrice }, aliceTok);
   check('ordre limit créé', limit.status === 201, JSON.stringify(limit.data));
   await wait(2500);
   const openAfter = await jreq('GET', '/trading/orders/open', null, aliceTok);

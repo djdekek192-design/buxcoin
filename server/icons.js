@@ -29,9 +29,9 @@ function chunk(type, data) {
 function renderIcon(size) {
   const px = new Uint8Array(size * size * 4);
   const cx = size / 2, cy = size / 2, R = size * 0.46;
-  const bg = [15, 20, 34, 255];
-  const ring = [255, 158, 27, 255];
-  const ringDark = [214, 120, 8, 255];
+  const bg = [11, 13, 20, 255];
+  const ring = [109, 94, 245, 255];
+  const ringDark = [79, 70, 229, 255];
   const white = [255, 255, 255, 255];
   const set = (x, y, c) => {
     const i = (y * size + x) * 4;
@@ -71,7 +71,7 @@ function renderIcon(size) {
         const grad = (dx + dy) / (2 * R);
         c = grad > 0.15 ? ring : ringDark;
       }
-      if (d > R - size * 0.03 && d <= R) c = [255, 210, 120, 255];
+      if (d > R - size * 0.03 && d <= R) c = [34, 211, 238, 255];
       if (c !== bg && inB(x, y)) c = white;
       set(x, y, c);
     }
