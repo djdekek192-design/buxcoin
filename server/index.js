@@ -75,6 +75,7 @@ let tickTimer = null;
 let backupTimer = null;
 
 function start() {
+  require('./icons').ensureIcons();
   const hasOwner = db.prepare("SELECT COUNT(*) AS n FROM users WHERE role = 'owner'").get().n > 0;
   if (!hasOwner) {
     const { ensureOwnerSetupToken } = require('./routes/setup');
