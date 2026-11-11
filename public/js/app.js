@@ -167,17 +167,21 @@ const App = {
     const view = document.getElementById('view');
     const authed = !!App.user;
 
-    const publicPages = ['login', 'register', 'forgot', 'reset'];
+    const publicPages = ['login', 'register', 'forgot', 'reset', 'setup-owner'];
     const needsOwnerSetup = await App.needsOwnerSetup();
 
-    if (!authed && !publicPages.includes(page)) {
-      if (needsOwnerSetup) { location.hash = '#/setup-owner'; return; }
-      location.hash = '#/login';
+    const redirectTo = (hash) => {
+      if (location.hash === hash) { App.route(); }
+      else { location.hash = hash; }
       return;
+    };
+
+    if (!authed && !publicPages.includes(page)) {
+      if (needsOwnerSetup) return redirectTo('#/setup-owner');
+      return redirectTo('#/login');
     }
     if (authed && publicPages.includes(page)) {
-      location.hash = '#/dashboard';
-      return;
+      return redirectTo('#/dashboard');
     }
 
     document.getElementById('sidebar').hidden = !authed;
