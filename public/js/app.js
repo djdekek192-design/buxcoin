@@ -230,7 +230,24 @@ const App = {
     }
   },
 
+  hideSplash() {
+    const s = document.getElementById('boot-splash');
+    if (s) s.remove();
+  },
+
+  showBootError(message) {
+    const box = document.getElementById('boot-error');
+    if (!box) return;
+    box.hidden = false;
+    box.textContent = '⚠️ ' + message;
+  },
+
   async boot() {
+    window.addEventListener('error', (e) => App.showBootError(e.message || 'Erreur inattendue'));
+    window.addEventListener('unhandledrejection', (e) => {
+      const msg = e.reason && e.reason.message ? e.reason.message : 'Erreur de connexion';
+      App.showBootError(msg);
+    });
     window.addEventListener('hashchange', () => App.route());
     document.getElementById('logout-btn').addEventListener('click', () => App.logout());
 
@@ -255,6 +272,7 @@ const App = {
     }
     App.applyTheme();
     await App.route();
+    App.hideSplash();
   }
 };
 
